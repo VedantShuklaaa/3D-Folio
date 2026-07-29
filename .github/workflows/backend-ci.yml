@@ -29,6 +29,8 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Generate Prisma client
+        env:
+          DATABASE_URL: postgres://localhost:5432/postgres
         run: bunx prisma generate
 
       - name: Typecheck
