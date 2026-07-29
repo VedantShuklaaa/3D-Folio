@@ -1,0 +1,45 @@
+name: Backend CI
+
+on:
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - "apps/api/**"
+  push:
+    branches: [dev]
+    paths:
+      - "apps/api/**"
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Generate Prisma client
+        env:
+          DATABASE_URL: postgres://localhost:5432/postgres
+        run: bunx prisma generate
+
+      - name: Typecheck
+        run: bunx tsc --noEmit
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Run tests
+        run: bun test
