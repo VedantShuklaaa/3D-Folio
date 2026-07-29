@@ -1,0 +1,40 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "apps/api/**"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set environment variables
+        id: vars
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "app_dir=/home/${{ secrets.EC2_USER }}/apps/api-prod" >> "$GITHUB_OUTPUT"
+            echo "pm2_name=folio-api-prod" >> "$GITHUB_OUTPUT"
+            echo "branch=main" >> "$GITHUB_OUTPUT"
+          else
+            echo "app_dir=/home/${{ secrets.EC2_USER }}/apps/api-dev" >> "$GITHUB_OUTPUT"
+            echo "pm2_name=folio-api-dev" >> "$GITHUB_OUTPUT"
+            echo "branch=dev" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ${{ steps.vars.outputs.app_dir }}
+            git fetch origin
+            git checkout ${{ steps.vars.outputs.branch }}
+            git pull origin ${{ steps.vars.outputs.branch }}
+            bun install --frozen-lockfile
+            bunx prisma generate
+            pm2 restart ${{ steps.vars.outputs.pm2_name }} || pm2 start bun --name ${{ steps.vars.outputs.pm2_name }} -- run start
+            pm2 save
