@@ -6,7 +6,8 @@
     "moduleResolution": "NodeNext",
     "target": "ES2022",
     "types": [
-      "node"
+      "node",
+      "bun"
     ],
     "sourceMap": true,
     "strict": true,
