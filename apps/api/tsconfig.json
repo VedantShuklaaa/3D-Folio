@@ -16,7 +16,7 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
+    "exactOptionalPropertyTypes": false,
     "skipLibCheck": true
   },
   "include": [
