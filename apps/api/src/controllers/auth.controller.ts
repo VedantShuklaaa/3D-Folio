@@ -59,3 +59,25 @@ export const googleCallback = asyncHandler(async (req: Request, res: Response) =
 
 	res.redirect("/");
 });
+
+export const logout = asyncHandler(async (req: Request, res: Response) => {
+	res.clearCookie(SESSION_COOKIE);
+	res.status(200).json({ success: true, message: "Logged out" });
+});
+
+export const getMe = asyncHandler(async (req: Request, res: Response) => {
+	if (!req.user) {
+		throw ApiError.unauthorized("Not authenticated");
+	}
+
+	res.status(200).json({
+		success: true,
+		data: {
+			id: req.user.id,
+			email: req.user.email,
+			name: req.user.name,
+			picture: req.user.picture,
+			role: req.user.role,
+		},
+	});
+});
