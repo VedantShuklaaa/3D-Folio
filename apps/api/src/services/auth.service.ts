@@ -1,5 +1,6 @@
 import { generateCodeVerifier, generateState, OAuth2RequestError } from "arctic";
 import { google } from "../lib/google.js";
+import { env } from "../config/env.js";
 import { userRepository } from "../repositories/user.repository.js";
 import { ApiError } from "../utils/apiError.js";
 
@@ -72,12 +73,21 @@ export const authService = {
 			}
 		}
 
-		const user = await userRepository.upsertFromGoogle({
+		let user = await userRepository.upsertFromGoogle({
 			googleId: googleUser.sub,
 			email: googleUser.email,
 			name: googleUser.name,
 			picture: googleUser.picture,
 		});
+
+		if (user.email === env.ADMIN_EMAIL && user.role !== "ADMIN") {
+			user = await userRepository.updateRole(user.id, "ADMIN");
+		}
+
+		const totalUsers = await userRepository.count({});
+		if (totalUsers === 1 && user.role !== "ADMIN") {
+			user = await userRepository.updateRole(user.id, "ADMIN");
+		}
 
 		if (!user.isActive) {
 			throw ApiError.forbidden("This account has been deactivated");

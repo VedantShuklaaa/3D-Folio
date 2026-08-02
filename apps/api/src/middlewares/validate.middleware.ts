@@ -11,7 +11,7 @@ export function validate(schema: ZodType) {
 		});
 
 		if (!result.success) {
-			throw ApiError.badRequest("Validation failed", result.error.flatten());
+			return next(ApiError.badRequest("Validation failed", result.error.flatten()));
 		}
 
 		const parsed = result.data as { body?: unknown; query?: unknown; params?: unknown };
