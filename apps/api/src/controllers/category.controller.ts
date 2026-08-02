@@ -32,7 +32,9 @@ export const deleteCategory = asyncHandler(async (req: Request, res: Response) =
 	const { id } = req.params;
 	if (!id || typeof id !== "string") throw ApiError.badRequest("Missing category id");
 
-	await categoryService.deleteCategory(id);
+	const force = req.query.force === "true";
+
+	await categoryService.deleteCategory(id, force);
 
 	res.status(204).send();
 });

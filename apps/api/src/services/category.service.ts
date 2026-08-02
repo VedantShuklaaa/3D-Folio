@@ -57,16 +57,18 @@ export const categoryService = {
 		return categoryRepository.update(id, { ...data, ...(slug && { slug }) });
 	},
 
-	async deleteCategory(id: string) {
+	async deleteCategory(id: string, force: boolean) {
 		const existing = await categoryRepository.findById(id);
 		if (!existing) {
 			throw ApiError.notFound("Category not found");
 		}
 
 		const projectCount = await categoryRepository.countProjectsInCategory(id);
-		if (projectCount > 0) {
-			throw ApiError.badRequest(
-				`Cannot delete category with ${projectCount} project(s) still assigned to it`
+
+		if (projectCount > 0 && !force) {
+			throw ApiError.conflict(
+				`This category is attached to ${projectCount} project(s). Pass force=true to delete anyway.`,
+				{ projectCount, requiresConfirmation: true }
 			);
 		}
 
