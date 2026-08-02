@@ -1,10 +1,7 @@
 import type { CorsOptions } from "cors";
 import { env } from "./env.js";
 
-const allowedOrigins =
-	env.NODE_ENV === "production"
-		? ["https://yoursite.com", "https://www.yoursite.com"]
-		: ["http://localhost:3000", "http://localhost:5173"];
+const allowedOrigins = env.CORS_ORIGINS.split(",").map((origin) => origin.trim());
 
 export const corsOptions: CorsOptions = {
 	origin(origin, callback) {

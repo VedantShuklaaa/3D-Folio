@@ -1,7 +1,8 @@
 import { projectRepository } from "../repositories/project.repository.js";
 import { ApiError } from "../utils/apiError.js";
 import type { Visibility } from "../generated/prisma/client.js";
-import { generateSlug } from "../utils/slug.js";
+import { generateSlug, generateUniqueSlug } from "../utils/slug.js";
+
 
 interface CreateProjectDTO {
 	title: string;
@@ -34,15 +35,25 @@ interface ListProjectsParams {
 	search?: string;
 }
 
+async function resolveUniqueSlug(title: string, excludeId?: string): Promise<string> {
+	const base = generateSlug(title);
+	let slug = base;
+	let suffix = 2;
+
+	while (true) {
+		const existing = excludeId
+			? await projectRepository.findBySlugExcludingId(slug, excludeId)
+			: await projectRepository.findBySlug(slug);
+
+		if (!existing) return slug;
+
+		slug = generateUniqueSlug(title, suffix++);
+	}
+}
+
 export const projectService = {
 	async createProject(data: CreateProjectDTO, createdBy: string) {
-		const slug = generateSlug(data.title);
-
-		const existing = await projectRepository.findBySlug(slug);
-		if (existing) {
-			throw ApiError.conflict("A project with a similar title already exists");
-		}
-
+		const slug = await resolveUniqueSlug(data.title);
 		return projectRepository.create({ ...data, slug, createdBy });
 	},
 
@@ -66,10 +77,10 @@ export const projectService = {
 		};
 	},
 
-	async getProjectBySlug(slug: string) {
+	async getProjectBySlug(slug: string, options?: { includeUnpublished?: boolean }) {
 		const project = await projectRepository.findBySlug(slug);
 
-		if (!project) {
+		if (!project || (!options?.includeUnpublished && !project.published)) {
 			throw ApiError.notFound("Project not found");
 		}
 
@@ -84,11 +95,7 @@ export const projectService = {
 
 		let slug: string | undefined;
 		if (data.title && data.title !== existing.title) {
-			slug = generateSlug(data.title);
-			const conflict = await projectRepository.findBySlugExcludingId(slug, id);
-			if (conflict) {
-				throw ApiError.conflict("A project with a similar title already exists");
-			}
+			slug = await resolveUniqueSlug(data.title, id);
 		}
 
 		return projectRepository.update(

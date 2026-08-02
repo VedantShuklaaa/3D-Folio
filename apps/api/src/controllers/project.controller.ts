@@ -23,6 +23,10 @@ export const createProject = asyncHandler(async (req: Request, res: Response) =>
 	res.status(201).json({ success: true, data: project });
 });
 
+function isStaff(user: Request["user"]) {
+	return user?.role === "ADMIN" || user?.role === "HELPER";
+}
+
 export const listProjects = asyncHandler(async (req: Request, res: Response) => {
 	const query = req.query as unknown as {
 		page: number;
@@ -33,7 +37,12 @@ export const listProjects = asyncHandler(async (req: Request, res: Response) => 
 		search?: string;
 	};
 
-	const result = await projectService.listProjects(query);
+	const staff = isStaff(req.user);
+
+	const result = await projectService.listProjects({
+		...query,
+		published: staff ? query.published : true,
+	});
 
 	res.status(200).json({ success: true, data: result });
 });
@@ -42,7 +51,9 @@ export const getProjectBySlug = asyncHandler(async (req: Request, res: Response)
 	const { slug } = req.params;
 	if (!slug || typeof slug !== "string") throw ApiError.badRequest("Missing slug");
 
-	const project = await projectService.getProjectBySlug(slug);
+	const project = await projectService.getProjectBySlug(slug, {
+		includeUnpublished: isStaff(req.user),
+	});
 
 	res.status(200).json({ success: true, data: project });
 });

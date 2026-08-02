@@ -57,7 +57,7 @@ export const googleCallback = asyncHandler(async (req: Request, res: Response) =
 	res.clearCookie(OAUTH_STATE_COOKIE);
 	res.clearCookie(OAUTH_VERIFIER_COOKIE);
 
-	res.redirect("/");
+	res.redirect(env.FRONTEND_URL);
 });
 
 export const logout = asyncHandler(async (req: Request, res: Response) => {

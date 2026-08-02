@@ -5,11 +5,11 @@ import type { Role } from "../generated/prisma/client.js";
 export function requireRole(...allowedRoles: Role[]) {
 	return (req: Request, res: Response, next: NextFunction) => {
 		if (!req.user) {
-			throw ApiError.unauthorized("Not authenticated");
+			return next(ApiError.unauthorized("Not authenticated"));
 		}
 
 		if (!allowedRoles.includes(req.user.role)) {
-			throw ApiError.forbidden("Insufficient permissions");
+			return next(ApiError.forbidden("Insufficient permissions"));
 		}
 
 		next();

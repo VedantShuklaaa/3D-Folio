@@ -24,7 +24,6 @@ export function errorMiddleware(
 		});
 	}
 
-	// unexpected/unhandled error
 	logger.error({
 		err,
 		method: req.method,
@@ -77,6 +76,22 @@ export const requireAuth = asyncHandler(
 		}
 
 		req.user = user;
+		next();
+	}
+);
+
+
+export const optionalAuth = asyncHandler(
+	async (req: Request, _res: Response, next: NextFunction) => {
+		const token = req.cookies?.session;
+		if (!token) return next();
+
+		const payload = verifySessionToken(token);
+		if (!payload) return next();
+
+		const user = await userRepository.findById(payload.userId);
+		if (user?.isActive) req.user = user;
+
 		next();
 	}
 );

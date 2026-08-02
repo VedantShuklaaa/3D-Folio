@@ -1,10 +1,10 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import { errorMiddleware } from "./middlewares/auth.middleware.js";
 import { corsOptions } from "./config/cors.js";
 import routes from "./routes/index.js";
-import { notFoundMiddleware } from "./middlewares/notfound.middleware.js";
+import { errorMiddleware } from "./middlewares/auth.middleware.js";
+import { notFoundMiddleware } from "./middlewares/notFound.middleware.js";
 
 const app = express();
 

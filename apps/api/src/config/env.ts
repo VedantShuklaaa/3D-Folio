@@ -21,6 +21,8 @@ const envSchema = z.object({
 	DATABASE_URL: z.url(),
 
 	ADMIN_EMAIL: z.email(),
+	FRONTEND_URL: z.url(),
+	CORS_ORIGINS: z.string().min(1),
 });
 
 const parsed = envSchema.safeParse(process.env);
