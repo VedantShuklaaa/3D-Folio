@@ -33,6 +33,7 @@ interface FindManyParams {
 	featured?: boolean;
 	published?: boolean;
 	search?: string;
+	includeUnpublished: boolean;
 }
 
 const projectInclude = {
@@ -67,13 +68,15 @@ export const projectRepository = {
 	},
 
 	findMany(params: FindManyParams) {
-		const { skip, take, categoryId, featured, published, search } = params;
+		const { skip, take, categoryId, featured, published, search, includeUnpublished } = params;
 
 		return prisma.project.findMany({
 			where: {
 				...(categoryId && { categoryId }),
 				...(featured !== undefined && { featured }),
-				...(published !== undefined && { published }),
+				...(includeUnpublished
+					? published !== undefined && { published }
+					: { published: true, visibility: "PUBLIC" }),
 				...(search && {
 					OR: [
 						{ title: { contains: search, mode: "insensitive" as const } },
@@ -89,13 +92,15 @@ export const projectRepository = {
 	},
 
 	count(params: Omit<FindManyParams, "skip" | "take">) {
-		const { categoryId, featured, published, search } = params;
+		const { categoryId, featured, published, search, includeUnpublished } = params;
 
 		return prisma.project.count({
 			where: {
 				...(categoryId && { categoryId }),
 				...(featured !== undefined && { featured }),
-				...(published !== undefined && { published }),
+				...(includeUnpublished
+					? published !== undefined && { published }
+					: { published: true, visibility: "PUBLIC" }),
 				...(search && {
 					OR: [
 						{ title: { contains: search, mode: "insensitive" as const } },
