@@ -1,8 +1,7 @@
 import { projectRepository } from "../repositories/project.repository.js";
 import { ApiError } from "../utils/apiError.js";
+import { generateSlug } from "../utils/slug.js";
 import type { Visibility } from "../generated/prisma/client.js";
-import { generateSlug, generateUniqueSlug } from "../utils/slug.js";
-
 
 interface CreateProjectDTO {
 	title: string;
@@ -35,35 +34,25 @@ interface ListProjectsParams {
 	search?: string;
 }
 
-async function resolveUniqueSlug(title: string, excludeId?: string): Promise<string> {
-	const base = generateSlug(title);
-	let slug = base;
-	let suffix = 2;
-
-	while (true) {
-		const existing = excludeId
-			? await projectRepository.findBySlugExcludingId(slug, excludeId)
-			: await projectRepository.findBySlug(slug);
-
-		if (!existing) return slug;
-
-		slug = generateUniqueSlug(title, suffix++);
-	}
-}
-
 export const projectService = {
 	async createProject(data: CreateProjectDTO, createdBy: string) {
-		const slug = await resolveUniqueSlug(data.title);
+		const slug = generateSlug(data.title);
+
+		const existing = await projectRepository.findBySlug(slug);
+		if (existing) {
+			throw ApiError.conflict("A project with a similar title already exists");
+		}
+
 		return projectRepository.create({ ...data, slug, createdBy });
 	},
 
-	async listProjects(params: ListProjectsParams) {
+	async listProjects(params: ListProjectsParams, includeUnpublished: boolean) {
 		const { page, limit, ...filters } = params;
 		const skip = (page - 1) * limit;
 
 		const [projects, total] = await Promise.all([
-			projectRepository.findMany({ ...filters, skip, take: limit }),
-			projectRepository.count(filters),
+			projectRepository.findMany({ ...filters, skip, take: limit, includeUnpublished }),
+			projectRepository.count({ ...filters, includeUnpublished }),
 		]);
 
 		return {
@@ -77,10 +66,14 @@ export const projectService = {
 		};
 	},
 
-	async getProjectBySlug(slug: string, options?: { includeUnpublished?: boolean }) {
+	async getProjectBySlug(slug: string, includeUnpublished: boolean) {
 		const project = await projectRepository.findBySlug(slug);
 
-		if (!project || (!options?.includeUnpublished && !project.published)) {
+		if (!project) {
+			throw ApiError.notFound("Project not found");
+		}
+
+		if (!includeUnpublished && (!project.published || project.visibility !== "PUBLIC")) {
 			throw ApiError.notFound("Project not found");
 		}
 
@@ -95,7 +88,11 @@ export const projectService = {
 
 		let slug: string | undefined;
 		if (data.title && data.title !== existing.title) {
-			slug = await resolveUniqueSlug(data.title, id);
+			slug = generateSlug(data.title);
+			const conflict = await projectRepository.findBySlugExcludingId(slug, id);
+			if (conflict) {
+				throw ApiError.conflict("A project with a similar title already exists");
+			}
 		}
 
 		return projectRepository.update(

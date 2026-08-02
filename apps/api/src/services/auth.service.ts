@@ -80,7 +80,7 @@ export const authService = {
 			picture: googleUser.picture,
 		});
 
-		if (user.email === env.ADMIN_EMAIL && user.role !== "ADMIN") {
+		if (user.email.toLowerCase() === env.ADMIN_EMAIL.toLowerCase() && user.role !== "ADMIN") {
 			user = await userRepository.updateRole(user.id, "ADMIN");
 		}
 

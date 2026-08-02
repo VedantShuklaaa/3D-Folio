@@ -3,6 +3,11 @@ import { projectService } from "../services/project.service.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/apiError.js";
 import type { Visibility } from "../generated/prisma/client.js";
+import { toProjectDetailDTO, toProjectListDTO } from "../types/project.js";
+
+function isStaff(user: Request["user"]) {
+	return user?.role === "ADMIN" || user?.role === "HELPER";
+}
 
 export const createProject = asyncHandler(async (req: Request, res: Response) => {
 	if (!req.user) throw ApiError.unauthorized("Not authenticated");
@@ -20,12 +25,8 @@ export const createProject = asyncHandler(async (req: Request, res: Response) =>
 
 	const project = await projectService.createProject(body, req.user.id);
 
-	res.status(201).json({ success: true, data: project });
+	res.status(201).json({ success: true, data: toProjectDetailDTO(project) });
 });
-
-function isStaff(user: Request["user"]) {
-	return user?.role === "ADMIN" || user?.role === "HELPER";
-}
 
 export const listProjects = asyncHandler(async (req: Request, res: Response) => {
 	const query = req.query as unknown as {
@@ -39,23 +40,26 @@ export const listProjects = asyncHandler(async (req: Request, res: Response) => 
 
 	const staff = isStaff(req.user);
 
-	const result = await projectService.listProjects({
-		...query,
-		published: staff ? query.published : true,
-	});
+	const result = await projectService.listProjects(query, staff);
 
-	res.status(200).json({ success: true, data: result });
+	res.status(200).json({
+		success: true,
+		data: {
+			projects: result.projects.map(toProjectListDTO),
+			pagination: result.pagination,
+		},
+	});
 });
 
 export const getProjectBySlug = asyncHandler(async (req: Request, res: Response) => {
 	const { slug } = req.params;
 	if (!slug || typeof slug !== "string") throw ApiError.badRequest("Missing slug");
 
-	const project = await projectService.getProjectBySlug(slug, {
-		includeUnpublished: isStaff(req.user),
-	});
+	const staff = isStaff(req.user);
 
-	res.status(200).json({ success: true, data: project });
+	const project = await projectService.getProjectBySlug(slug, staff);
+
+	res.status(200).json({ success: true, data: toProjectDetailDTO(project) });
 });
 
 export const updateProject = asyncHandler(async (req: Request, res: Response) => {
@@ -77,7 +81,7 @@ export const updateProject = asyncHandler(async (req: Request, res: Response) =>
 
 	const project = await projectService.updateProject(id, body);
 
-	res.status(200).json({ success: true, data: project });
+	res.status(200).json({ success: true, data: toProjectDetailDTO(project) });
 });
 
 export const deleteProject = asyncHandler(async (req: Request, res: Response) => {
