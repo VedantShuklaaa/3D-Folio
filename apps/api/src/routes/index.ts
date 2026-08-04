@@ -6,6 +6,7 @@ import categoryRoutes from "./category.routes.js";
 import technologyRoutes from "./technology.routes.js";
 import uploadRoutes from "./upload.routes.js";
 import mediaRoutes from "./media.routes.js";
+import downloadRoutes from "./download.routes.js";
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use("/categories", categoryRoutes);
 router.use("/technologies", technologyRoutes);
 router.use("/uploads", uploadRoutes);
 router.use("/media", mediaRoutes);
+router.use("/downloads", downloadRoutes);
 
 export default router;
