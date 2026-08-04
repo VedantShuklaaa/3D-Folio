@@ -37,3 +37,12 @@ export const deleteDownload = asyncHandler(async (req: Request, res: Response) =
 
 	res.status(204).send();
 });
+
+export const getDownloadUrl = asyncHandler(async (req: Request, res: Response) => {
+	const { id } = req.params;
+	if (!id || typeof id !== "string") throw ApiError.badRequest("Missing download id");
+
+	const download = await downloadService.getSignedUrlAndTrack(id);
+
+	res.status(200).json({ success: true, data: { url: download.url } });
+});

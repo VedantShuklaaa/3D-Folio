@@ -2,6 +2,7 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3, bucketName } from "../lib/aws/s3.js";
 import { randomUUID } from "node:crypto";
+import { type PresignInput } from "../types/upload.js";
 
 const PRESIGN_EXPIRY_SECONDS = 300;
 
@@ -12,15 +13,6 @@ const ALLOWED_MEDIA_TYPES = new Set([
 	"video/mp4",
 	"model/gltf-binary",
 ]);
-
-type UploadKind = "media" | "downloads";
-
-interface PresignInput {
-	projectId: string;
-	fileName: string;
-	contentType: string;
-	kind: UploadKind;
-}
 
 export const uploadService = {
 	async createPresignedUploadUrl({ projectId, fileName, contentType, kind }: PresignInput) {

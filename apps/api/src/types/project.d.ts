@@ -1,4 +1,5 @@
 import type { Project, Category, Technology, ProjectMedia, ProjectDownload, User } from "../generated/prisma/client.js";
+import { storageService } from "../services/storage.service.js";
 
 type ProjectWithRelations = Project & {
 	category: Category | null;
@@ -65,7 +66,7 @@ export function toProjectDetailDTO(project: ProjectWithRelations): ProjectDetail
 		media: project.media.map((m) => ({
 			id: m.id,
 			type: m.type,
-			storageKey: m.storageKey,
+			url: storageService.generatePublicUrl(m.storageKey),
 			title: m.title,
 			order: m.order,
 		})),
@@ -73,6 +74,7 @@ export function toProjectDetailDTO(project: ProjectWithRelations): ProjectDetail
 			id: d.id,
 			type: d.type,
 			label: d.label,
+			url: storageService.generateSignedDownloadUrl(d.storageKey),
 			fileSizeBytes: d.fileSizeBytes,
 		})),
 		createdAt: project.createdAt.toISOString(),
