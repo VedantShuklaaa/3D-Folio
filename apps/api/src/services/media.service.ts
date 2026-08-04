@@ -2,6 +2,7 @@ import { mediaRepository } from "../repositories/media.repository.js";
 import { projectRepository } from "../repositories/project.repository.js";
 import { ApiError } from "../utils/apiError.js";
 import type { MediaType } from "../generated/prisma/client.js";
+import { storageService } from "./storage.service.js";
 
 interface CreateMediaDTO {
 	projectId: string;
@@ -33,6 +34,7 @@ export const mediaService = {
 			throw ApiError.notFound("Media not found");
 		}
 
+		await storageService.delete(existing.storageKey);
 		return mediaRepository.delete(id);
 	},
 };

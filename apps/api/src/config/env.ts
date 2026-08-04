@@ -23,6 +23,10 @@ const envSchema = z.object({
 	ADMIN_EMAIL: z.email(),
 	FRONTEND_URL: z.url(),
 	CORS_ORIGINS: z.string().min(1),
+
+	CLOUDFRONT_DOMAIN: z.string().min(1),
+	CLOUDFRONT_KEY_PAIR_ID: z.string().min(1),
+	CLOUDFRONT_PRIVATE_KEY: z.string().min(1),
 });
 
 const parsed = envSchema.safeParse(process.env);

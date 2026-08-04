@@ -2,6 +2,8 @@ import { downloadRepository } from "../repositories/download.repository.js";
 import { projectRepository } from "../repositories/project.repository.js";
 import { ApiError } from "../utils/apiError.js";
 import type { DownloadType } from "../generated/prisma/client.js";
+import { getSignedDownloadUrl } from "../lib/aws/cloudfront.js";
+import { storageService } from "./storage.service.js";
 
 interface CreateDownloadDTO {
 	storageKey: string;
@@ -39,6 +41,17 @@ export const downloadService = {
 			throw ApiError.notFound("Download not found");
 		}
 
+		await storageService.delete(existing.storageKey);
 		return downloadRepository.delete(id);
 	},
+
+	async getSignedUrlAndTrack(id: string) {
+		const download = await downloadRepository.findById(id);
+		if (!download) throw ApiError.notFound("Download not found");
+
+		await downloadRepository.incrementDownloadCount(id);
+
+		return { url: getSignedDownloadUrl(download.storageKey) };
+	},
 };
+
