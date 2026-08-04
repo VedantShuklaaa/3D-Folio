@@ -66,6 +66,7 @@ export function toProjectDetailDTO(project: ProjectWithRelations): ProjectDetail
 		media: project.media.map((m) => ({
 			id: m.id,
 			type: m.type,
+			storageKey: m.storageKey,
 			url: storageService.generatePublicUrl(m.storageKey),
 			title: m.title,
 			order: m.order,
