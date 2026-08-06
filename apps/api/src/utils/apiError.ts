@@ -40,4 +40,8 @@ export class ApiError extends Error {
 	static badGateway(message = "Upstream request failed") {
 		return new ApiError(502, message);
 	}
+
+	static tooManyRequests(message = "Too many requests") {
+		return new ApiError(429, message);
+	}
 }

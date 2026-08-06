@@ -8,6 +8,7 @@ import {
 import { requireAuth } from "../middlewares/auth.middleware.js";
 import { requireRole } from "../middlewares/rbac.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
+import { cacheResponse } from "../middlewares/cache.middleware.js";
 import {
 	createCategorySchema,
 	updateCategorySchema,
@@ -16,7 +17,7 @@ import {
 
 const router = Router();
 
-router.get("/", listCategories);
+router.get("/", cacheResponse(300), listCategories);
 
 router.post("/", requireAuth, requireRole("ADMIN", "HELPER"), validate(createCategorySchema), createCategory);
 router.patch("/:id", requireAuth, requireRole("ADMIN", "HELPER"), validate(updateCategorySchema), updateCategory);

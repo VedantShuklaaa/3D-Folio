@@ -13,10 +13,11 @@ import {
 	updateTechnologySchema,
 	deleteTechnologySchema,
 } from "../validations/technology.validation.js";
+import { cacheResponse } from "../middlewares/cache.middleware.js";
 
 const router = Router();
 
-router.get("/", listTechnologies);
+router.get("/", cacheResponse(300), listTechnologies);
 
 router.post("/", requireAuth, requireRole("ADMIN", "HELPER"), validate(createTechnologySchema), createTechnology);
 router.patch("/:id", requireAuth, requireRole("ADMIN", "HELPER"), validate(updateTechnologySchema), updateTechnology);
