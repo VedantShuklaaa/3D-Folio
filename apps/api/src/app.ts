@@ -9,6 +9,8 @@ import { rateLimit } from "./middlewares/rateLimit.middleware.js";
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
@@ -21,10 +23,10 @@ app.get("/health", (req, res) => {
 	});
 });
 
+app.use(rateLimit);
 app.use("/", routes);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
-app.use(rateLimit);
 
 export default app;

@@ -17,6 +17,8 @@ export function cacheResponse(ttlSeconds: number) {
 			logger.error({ err }, "Redis cache read failed, falling through to DB");
 		}
 
+		res.setHeader("X-Cache", "MISS");
+
 		const originalJson = res.json.bind(res);
 		res.json = (body: unknown) => {
 			if (res.statusCode === 200) {
@@ -24,7 +26,6 @@ export function cacheResponse(ttlSeconds: number) {
 					logger.error({ err }, "Redis cache write failed");
 				});
 			}
-			res.setHeader("X-Cache", "MISS");
 			return originalJson(body);
 		};
 
