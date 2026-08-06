@@ -27,6 +27,8 @@ const envSchema = z.object({
 	CLOUDFRONT_DOMAIN: z.string().min(1),
 	CLOUDFRONT_KEY_PAIR_ID: z.string().min(1),
 	CLOUDFRONT_PRIVATE_KEY: z.string().min(1),
+
+	REDIS_URL: z.string().min(1),
 });
 
 const parsed = envSchema.safeParse(process.env);

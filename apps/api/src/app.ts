@@ -5,6 +5,7 @@ import { corsOptions } from "./config/cors.js";
 import routes from "./routes/index.js";
 import { errorMiddleware } from "./middlewares/auth.middleware.js";
 import { notFoundMiddleware } from "./middlewares/notFound.middleware.js";
+import { rateLimit } from "./middlewares/rateLimit.middleware.js";
 
 const app = express();
 
@@ -24,5 +25,6 @@ app.use("/", routes);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
+app.use(rateLimit);
 
 export default app;

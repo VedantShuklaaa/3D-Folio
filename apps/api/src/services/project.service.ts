@@ -2,6 +2,8 @@ import { projectRepository } from "../repositories/project.repository.js";
 import { ApiError } from "../utils/apiError.js";
 import { generateSlug } from "../utils/slug.js";
 import type { Visibility } from "../generated/prisma/client.js";
+import { invalidateCachePattern } from "../utils/cache.js";
+import { logger } from "../config/logger.js";
 
 interface CreateProjectDTO {
 	title: string;
@@ -43,7 +45,18 @@ export const projectService = {
 			throw ApiError.conflict("A project with a similar title already exists");
 		}
 
-		return projectRepository.create({ ...data, slug, createdBy });
+		const project = await projectRepository.create({
+			...data,
+			slug,
+			createdBy,
+		});
+
+		try {
+			await invalidateCachePattern("cache:/projects*");
+		} catch (err) {
+			logger.error({ err }, "Failed to invalidate project cache");
+		}
+		return project;
 	},
 
 	async listProjects(params: ListProjectsParams, includeUnpublished: boolean) {
@@ -95,11 +108,18 @@ export const projectService = {
 			}
 		}
 
-		return projectRepository.update(
+		const project = await projectRepository.update(
 			id,
 			{ ...data, ...(slug && { slug }) },
 			existing.published
 		);
+
+		try {
+			await invalidateCachePattern("cache:/projects*");
+		} catch (err) {
+			logger.error({ err }, "Failed to invalidate project cache");
+		}
+		return project;
 	},
 
 	async deleteProject(id: string) {
@@ -108,6 +128,13 @@ export const projectService = {
 			throw ApiError.notFound("Project not found");
 		}
 
-		return projectRepository.delete(id);
+		const deleted = await projectRepository.delete(id);
+
+		try {
+			await invalidateCachePattern("cache:/projects*");
+		} catch (err) {
+			logger.error({ err }, "Failed to invalidate project cache");
+		}
+		return deleted;
 	},
 };
