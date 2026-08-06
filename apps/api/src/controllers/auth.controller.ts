@@ -1,4 +1,3 @@
-// src/controllers/auth.controller.ts
 import type { Request, Response } from "express";
 import { authService } from "../services/auth.service.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -6,21 +5,23 @@ import { ApiError } from "../utils/apiError.js";
 import { env } from "../config/env.js";
 import { createSessionToken } from "../config/session.js";
 
+const isProd = env.NODE_ENV === "production";
+
 const OAUTH_STATE_COOKIE = "google_oauth_state";
 const OAUTH_VERIFIER_COOKIE = "google_code_verifier";
 const OAUTH_COOKIE_OPTS = {
 	httpOnly: true,
 	maxAge: 10 * 60 * 1000,
 	sameSite: "lax" as const,
-	secure: env.NODE_ENV === "production",
+	secure: isProd,
 };
 
 const SESSION_COOKIE = "session";
 const SESSION_COOKIE_OPTS = {
 	httpOnly: true,
 	maxAge: 7 * 24 * 60 * 60 * 1000,
-	sameSite: "lax" as const,
-	secure: env.NODE_ENV === "production",
+	sameSite: isProd ? ("none" as const) : ("lax" as const),
+	secure: isProd,
 };
 
 export const googleLogin = asyncHandler(async (req: Request, res: Response) => {
@@ -54,14 +55,14 @@ export const googleCallback = asyncHandler(async (req: Request, res: Response) =
 	const token = createSessionToken(user.id);
 	res.cookie(SESSION_COOKIE, token, SESSION_COOKIE_OPTS);
 
-	res.clearCookie(OAUTH_STATE_COOKIE);
-	res.clearCookie(OAUTH_VERIFIER_COOKIE);
+	res.clearCookie(OAUTH_STATE_COOKIE, OAUTH_COOKIE_OPTS);
+	res.clearCookie(OAUTH_VERIFIER_COOKIE, OAUTH_COOKIE_OPTS);
 
 	res.redirect(env.FRONTEND_URL);
 });
 
 export const logout = asyncHandler(async (req: Request, res: Response) => {
-	res.clearCookie(SESSION_COOKIE);
+	res.clearCookie(SESSION_COOKIE, SESSION_COOKIE_OPTS);
 	res.status(200).json({ success: true, message: "Logged out" });
 });
 
