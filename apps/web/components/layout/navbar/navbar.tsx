@@ -1,91 +1,73 @@
 "use client";
-import {
-	Navbar,
-	NavBody,
-	NavItems,
-	MobileNav,
-	NavbarLogo,
-	NavbarButton,
-	MobileNavHeader,
-	MobileNavToggle,
-	MobileNavMenu,
-} from "@/components/ui/resizable-navbar";
-import { useState } from "react";
 
-export function NavbarDemo() {
-	const navItems = [
-		{
-			name: "Features",
-			link: "#features",
-		},
-		{
-			name: "Pricing",
-			link: "#pricing",
-		},
-		{
-			name: "Contact",
-			link: "#contact",
-		},
+import { useState } from "react";
+import Link from "next/link";
+import { motion, AnimatePresence } from "motion/react";
+import { Menu, X } from "lucide-react";
+
+export default function Navbar() {
+	const [isOpen, setIsOpen] = useState(false);
+
+	const links = [
+		{ name: "Home", href: "/" },
+		{ name: "Projects", href: "/projects" },
+		{ name: "About", href: "/about" },
 	];
 
-	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
 	return (
-		<div className="relative w-full border">
-			<Navbar>
-				{/* Desktop Navigation */}
-				<NavBody>
-					<NavbarLogo />
-					<NavItems items={navItems} />
-					<div className="flex items-center gap-4">
-						<NavbarButton variant="secondary">Login</NavbarButton>
-						<NavbarButton variant="primary">Book a call</NavbarButton>
-					</div>
-				</NavBody>
+		<header className="fixed top-5 left-1/2 -translate-x-1/2 z-50 min-w-[320px] sm:min-w-[400px]">
+			<motion.div
+				initial={{ y: -20, opacity: 0 }}
+				animate={{ y: 0, opacity: 1 }}
+				transition={{ duration: 0.3 }}
+				className="h-[6vh] min-h-[48px] px-6 border border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-black/80 backdrop-blur-md rounded-xl shadow-sm flex items-center justify-between gap-6"
+			>
+				{/* Three Links */}
+				<nav className="flex items-center gap-6">
+					{links.map((link) => (
+						<Link
+							key={link.name}
+							href={link.href}
+							className="text-sm font-medium text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white transition-colors"
+						>
+							{link.name}
+						</Link>
+					))}
+				</nav>
 
-				{/* Mobile Navigation */}
-				<MobileNav>
-					<MobileNavHeader>
-						<NavbarLogo />
-						<MobileNavToggle
-							isOpen={isMobileMenuOpen}
-							onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-						/>
-					</MobileNavHeader>
+				{/* Menu Icon */}
+				<button
+					onClick={() => setIsOpen((prev) => !prev)}
+					className="p-3 rounded-md text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 transition-colors focus:outline-none cursor-pointer"
+					aria-label="Toggle Menu"
+				>
+					{isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+				</button>
+			</motion.div>
 
-					<MobileNavMenu
-						isOpen={isMobileMenuOpen}
-						onClose={() => setIsMobileMenuOpen(false)}
+			{/* Dropdown menu when menu icon is clicked */}
+			<AnimatePresence>
+				{isOpen && (
+					<motion.div
+						initial={{ opacity: 0, y: -8, scale: 0.98 }}
+						animate={{ opacity: 1, y: 6, scale: 1 }}
+						exit={{ opacity: 0, y: -8, scale: 0.98 }}
+						transition={{ duration: 0.2 }}
+						className="w-full p-4 border border-neutral-200 dark:border-neutral-800 bg-white/90 dark:bg-black/90 backdrop-blur-md rounded-xl shadow-lg flex flex-col gap-2"
 					>
-						{navItems.map((item, idx) => (
-							<a
-								key={`mobile-link-${idx}`}
-								href={item.link}
-								onClick={() => setIsMobileMenuOpen(false)}
-								className="relative text-neutral-600 dark:text-neutral-300"
+						{links.map((link) => (
+							<Link
+								key={link.name}
+								href={link.href}
+								onClick={() => setIsOpen(false)}
+								className="px-3 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
 							>
-								<span className="block">{item.name}</span>
-							</a>
+								{link.name}
+							</Link>
 						))}
-						<div className="flex w-full flex-col gap-4">
-							<NavbarButton
-								onClick={() => setIsMobileMenuOpen(false)}
-								variant="primary"
-								className="w-full"
-							>
-								Login
-							</NavbarButton>
-							<NavbarButton
-								onClick={() => setIsMobileMenuOpen(false)}
-								variant="primary"
-								className="w-full"
-							>
-								Book a call
-							</NavbarButton>
-						</div>
-					</MobileNavMenu>
-				</MobileNav>
-			</Navbar>
-		</div>
+					</motion.div>
+				)}
+			</AnimatePresence>
+		</header>
 	);
 }
